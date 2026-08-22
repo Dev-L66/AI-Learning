@@ -88,7 +88,7 @@ def step3_match(candidate, jd):
     print("Step 3")
     system_prompt = """
     You are a professional HR assistant. compare the skills of candidate and the skills required in the JD and produce a final score between
-    1 and 100. also produce a short verdict whther the candidate is a good fit for the role.
+    1 and 100. also produce a short verdict whether the candidate is a good fit for the role. Verdict should be in bullets.
     """
     user_prompt = f"""
     Compare and mathe skills JD: {jd} Candidate: {candidate}

@@ -137,7 +137,9 @@ def run_agent(question):
         #  Give tool result back to LLM
         messages.append({"role": "user",
                         "content": "Observation: " + str(observation)})
-        sleep(5)
+        # rate limit
+        sleep(5)  
+       
 
 
 
