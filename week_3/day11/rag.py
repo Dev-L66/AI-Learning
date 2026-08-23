@@ -14,10 +14,24 @@ client = Groq(api_key=my_api_key)
 
 model = "openai/gpt-oss-20b"
 
+knowledge_base = {
+    "age": "36",
+    "net worth": "10 million"
+}
 
+def retrieve_info(question):
+    question = question.lower()
+    if "age" in question:
+        return knowledge_base["age"]
+    elif "net worth" in question:
+        return knowledge_base["net worth"]
+    else:
+        return None
+    
 
 def ask_question(question):
-    system_prompt = 'anwer in one line only'
+    context = retrieve_info(question)
+    system_prompt = f"""answer in one line only. Answer only based on this context. do not hallucinate. Context:{context}"""
     system_message ={
         "role": "system",
         "content": system_prompt
@@ -33,6 +47,6 @@ def ask_question(question):
     return answer
 
 
-question= "Do you know padho with pratyush?"
+question= "Mickey's net worth is? "
 
 print(ask_question(question))
