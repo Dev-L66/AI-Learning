@@ -22,7 +22,7 @@ embedding = model.encode(text)
 # print(embedding[:10])
 
 
-t1 = "There are 24 paid leaves"
+t1="There are 24 paid leaves"
 t2="There are 24 vacation days"
 
 
