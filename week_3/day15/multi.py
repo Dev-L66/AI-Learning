@@ -20,6 +20,7 @@ from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams, PointStruct,Filter, FieldCondition,MatchValue,PayloadSchemaType
 from sentence_transformers import SentenceTransformer
 from groq import Groq
+import json
 
 load_dotenv()
 
@@ -58,14 +59,13 @@ print(f"Create collection: {COLLECTION_NAME}")
 print(f"Vector Size: {EMBEDDING_SIZE}")
 print(f"Distance: COSINE")
 
+client.create_payload_index(collection_name=COLLECTION_NAME,
+                            field_name="category",
+                            field_schema=PayloadSchemaType.KEYWORD)
 
-with open("knowledge.txt", "r", encoding="utf-8") as f:
-    documents = [
-        line.strip()
-        for line in f 
-        if line.strip()
-    ]
-print(f"Loaded {len(documents)}")
+
+with open("knowledge_json.txt", "r", encoding="utf-8") as f:
+    documents = json.load(f)
 
 
           
@@ -75,24 +75,31 @@ model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 
 print("Embeding model ready!")
 
-embeddings = model.encode(documents)
+texts = [doc["text"] for doc in documents]
+embeddings = model.encode(texts)      
 
 print(f"Generate {len(embeddings)} embeddings")
 
 print(F"Embedding size: {len(embeddings[0])}")
 
 
-points =[]
+# points = []
+
+# for i in range(len(documents)):
+#     point = PointStruct(
+#         id = i+1,
+#         vector=embeddings[i].tolist(),
+#         payload=documents[i]
+#     )
+
+points = []
 
 for i, embedding in enumerate(embeddings):
     point = PointStruct(
-        id = i +1,
-        vector= embedding.tolist(),
-        payload={
-            "text":documents[i]
-        }
+        id=i + 1,
+        vector=embedding.tolist(),
+        payload=documents[i]
     )
-
     points.append(point)
 
 
@@ -121,15 +128,37 @@ def search(query, top_k=3):
 
 
 
+def search_with_query_filter(query, query_filter=None,top_k=3):
+    query_vector = model.encode(query).tolist()
+
+    results = client.query_points(
+        collection_name=COLLECTION_NAME,
+        query=query_vector,
+        limit=top_k,
+        with_payload=True,
+        query_filter=query_filter,
+    ).points
+
+    return results
+
+reimbursement_filter = Filter(
+    must = [
+        FieldCondition(
+            key = "category",
+            match=MatchValue(value="reimbursement")
+        ),
+    ]
+)
+
 query = "How man vacation days do i get?" 
 
-results = search(query, top_k=3)
+results = search_with_query_filter(query,reimbursement_filter, top_k=3)
 
 print("Search results:")
 
 
 for result in results:
-    print(F"Score:{result.score:.3f}")
+    print(f"Score:{result.score:.3f}")
     print(result.payload["text"])
 
 
